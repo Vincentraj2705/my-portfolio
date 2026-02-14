@@ -117,42 +117,78 @@ document.addEventListener('DOMContentLoaded', function() {
     generateCSRFToken();
 });
 
-// Welcome Screen Animation
-window.addEventListener('load', () => {
-    const welcomeOverlay = document.getElementById('welcomeOverlay');
-    const mainContent = document.getElementById('mainContent');
+// Initialize portfolio on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        initializePortfolio();
+    });
+} else {
+    initializePortfolio();
+}
 
-    // Prevent scrolling during welcome screen
-    document.body.classList.add('welcome-active');
+// Initialize portfolio features
+function initializePortfolio() {
+    console.log('Initializing portfolio features...');
 
-    // Start exit animation after 0.7s
-    setTimeout(() => {
-        welcomeOverlay.classList.add('pixelate-out');
-
-        // Remove overlay after animation completes
+    // Show welcome banner briefly
+    const welcomeBanner = document.getElementById('welcomeBanner');
+    if (welcomeBanner) {
+        requestAnimationFrame(() => {
+            welcomeBanner.classList.add('show');
+        });
         setTimeout(() => {
-            welcomeOverlay.style.display = "none";
-            mainContent.classList.add('show');
-            document.body.classList.remove('welcome-active');
-        }, 800); // Matches CSS animation duration
-
-    }, 700); // Welcome screen visible duration
-});
-
+            welcomeBanner.classList.add('hide');
+            welcomeBanner.classList.remove('show');
+        }, 1500);
+    }
     
-    // Add click handler for scroll indicator
+    // Initialize typing effect if hero title exists
+    const heroTitle = document.querySelector('.hero-text h1');
+    if (heroTitle) {
+        const originalText = heroTitle.textContent;
+        setTimeout(() => {
+            typeWriter(heroTitle, originalText, 50, () => {
+                // Show scroll indicator after typing
+                const scrollIndicator = document.getElementById('scrollIndicator');
+                if (scrollIndicator) {
+                    setTimeout(() => {
+                        scrollIndicator.classList.add('show');
+                    }, 1000);
+                }
+            });
+        }, 500);
+    } else {
+        // If no hero title, show scroll indicator immediately
+        const scrollIndicator = document.getElementById('scrollIndicator');
+        if (scrollIndicator) {
+            setTimeout(() => {
+                scrollIndicator.classList.add('show');
+            }, 2000);
+        }
+    }
+    
+    // Initialize other features
+    initializeScrollEffects();
+    initializeNavigation();
+}
+// Initialize scroll effects and navigation
+function initializeScrollEffects() {
+    // Scroll indicator click handler
     const scrollIndicator = document.getElementById('scrollIndicator');
     if (scrollIndicator) {
         scrollIndicator.addEventListener('click', () => {
             const aboutSection = document.querySelector('#about');
             if (aboutSection) {
-                aboutSection.scrollIntoView({
-                    behavior: 'smooth'
-                });
+                aboutSection.scrollIntoView({ behavior: 'smooth' });
             }
         });
     }
-});
+}
+
+function initializeNavigation() {
+    // Add any navigation initialization here
+    console.log('Navigation initialized');
+}
 
 // Mobile Navigation Toggle
 const hamburger = document.querySelector('.hamburger');
@@ -212,117 +248,6 @@ window.addEventListener('scroll', () => {
         }
     }
 });
-
-// Security Configuration
-const SECURITY_CONFIG = {
-    MAX_SUBMISSIONS_PER_HOUR: 3,
-    MIN_TIME_BETWEEN_SUBMISSIONS: 60000, // 1 minute
-    MAX_NAME_LENGTH: 100,
-    MAX_EMAIL_LENGTH: 254,
-    MAX_MESSAGE_LENGTH: 2000,
-    RATE_LIMIT_KEY: 'portfolio_submissions'
-};
-
-// Rate limiting functionality
-class RateLimiter {
-    static getSubmissions() {
-        const data = localStorage.getItem(SECURITY_CONFIG.RATE_LIMIT_KEY);
-        return data ? JSON.parse(data) : [];
-    }
-    
-    static addSubmission() {
-        const submissions = this.getSubmissions();
-        const now = Date.now();
-        submissions.push(now);
-        localStorage.setItem(SECURITY_CONFIG.RATE_LIMIT_KEY, JSON.stringify(submissions));
-    }
-    
-    static cleanOldSubmissions() {
-        const submissions = this.getSubmissions();
-        const oneHourAgo = Date.now() - (60 * 60 * 1000);
-        const recentSubmissions = submissions.filter(time => time > oneHourAgo);
-        localStorage.setItem(SECURITY_CONFIG.RATE_LIMIT_KEY, JSON.stringify(recentSubmissions));
-    }
-    
-    static isRateLimited() {
-        this.cleanOldSubmissions();
-        const submissions = this.getSubmissions();
-        
-        // Check hourly limit
-        if (submissions.length >= SECURITY_CONFIG.MAX_SUBMISSIONS_PER_HOUR) {
-            return { limited: true, reason: 'Too many submissions this hour. Please try again later.' };
-        }
-        
-        // Check minimum time between submissions
-        const lastSubmission = Math.max(...submissions);
-        const timeSinceLastSubmission = Date.now() - lastSubmission;
-        if (timeSinceLastSubmission < SECURITY_CONFIG.MIN_TIME_BETWEEN_SUBMISSIONS) {
-            const waitTime = Math.ceil((SECURITY_CONFIG.MIN_TIME_BETWEEN_SUBMISSIONS - timeSinceLastSubmission) / 1000);
-            return { limited: true, reason: `Please wait ${waitTime} seconds before submitting again.` };
-        }
-        
-        return { limited: false };
-    }
-}
-
-// Input sanitization functions
-function sanitizeInput(input, maxLength) {
-    if (!input || typeof input !== 'string') return '';
-    return input.trim().slice(0, maxLength);
-}
-
-function sanitizeHTML(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-}
-
-function validateName(name) {
-    const sanitized = sanitizeInput(name, SECURITY_CONFIG.MAX_NAME_LENGTH);
-    const nameRegex = /^[a-zA-Z\s.'-]{2,100}$/;
-    return {
-        valid: nameRegex.test(sanitized) && sanitized.length >= 2,
-        value: sanitized,
-        error: 'Name must be 2-100 characters and contain only letters, spaces, dots, hyphens, and apostrophes.'
-    };
-}
-
-function validateEmail(email) {
-    const sanitized = sanitizeInput(email, SECURITY_CONFIG.MAX_EMAIL_LENGTH);
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    
-    // Additional checks for email header injection
-    const hasNewlines = /[\r\n]/.test(sanitized);
-    const hasHeaders = /\b(to|cc|bcc|subject|content-type):/i.test(sanitized);
-    
-    return {
-        valid: emailRegex.test(sanitized) && !hasNewlines && !hasHeaders && sanitized.length <= 254,
-        value: sanitized,
-        error: 'Please enter a valid email address (max 254 characters).'
-    };
-}
-
-function validateMessage(message) {
-    const sanitized = sanitizeInput(message, SECURITY_CONFIG.MAX_MESSAGE_LENGTH);
-    
-    // Check for suspicious patterns
-    const suspiciousPatterns = [
-        /<script[^>]*>.*?<\/script>/gi,
-        /javascript:/gi,
-        /vbscript:/gi,
-        /onload=/gi,
-        /onerror=/gi,
-        /onclick=/gi
-    ];
-    
-    const hasSuspiciousContent = suspiciousPatterns.some(pattern => pattern.test(sanitized));
-    
-    return {
-        valid: sanitized.length >= 10 && sanitized.length <= SECURITY_CONFIG.MAX_MESSAGE_LENGTH && !hasSuspiciousContent,
-        value: sanitized,
-        error: 'Message must be 10-2000 characters and cannot contain suspicious content.'
-    };
-}
 
 // Contact Form Handling with Enhanced Security
 const contactForm = document.getElementById('contactForm');
@@ -687,6 +612,4 @@ if ('performance' in window) {
             console.log(`⚡ Page loaded in ${loadTime}ms`);
         }, 0);
     });
-
 }
-
