@@ -119,41 +119,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Welcome Screen Animation
 window.addEventListener('load', () => {
+window.addEventListener('load', () => {
     const welcomeOverlay = document.getElementById('welcomeOverlay');
     const mainContent = document.getElementById('mainContent');
-    
-    // Prevent scrolling during welcome screen
+
     document.body.classList.add('welcome-active');
-    
-    // Hide welcome screen after 3 seconds with pixelated effect
+
     setTimeout(() => {
         welcomeOverlay.classList.add('pixelate-out');
-        
-        // Show main content after pixelated overlay disappears
+
         setTimeout(() => {
+            welcomeOverlay.style.display = "none";
             mainContent.classList.add('show');
-            document.body.classList.remove('welcome-active'); // Re-enable scrolling
-            
-            // Initialize typing effect after main content is visible
-            const heroTitle = document.querySelector('.hero-text h1');
-            const scrollIndicator = document.getElementById('scrollIndicator');
-            
-            if (heroTitle) {
-                const originalText = heroTitle.textContent;
-                // Start typing effect after a short delay
-                setTimeout(() => {
-                    typeWriter(heroTitle, originalText, 50, () => {
-                        // Show scroll indicator after typing completes + 1 second delay
-                        setTimeout(() => {
-                            if (scrollIndicator) {
-                                scrollIndicator.classList.add('show');
-                            }
-                        }, 1000);
-                    });
-                }, 500);
-            }
-        }, 1500); // Wait for pixelate animation to complete
-    }, 3000); // Show welcome screen for 3 seconds
+            document.body.classList.remove('welcome-active');
+        }, 800); // animation duration
+
+    }, 1500); // welcome screen visible time
+});
+
     
     // Add click handler for scroll indicator
     const scrollIndicator = document.getElementById('scrollIndicator');
@@ -702,4 +685,5 @@ if ('performance' in window) {
             console.log(`⚡ Page loaded in ${loadTime}ms`);
         }, 0);
     });
+
 }
