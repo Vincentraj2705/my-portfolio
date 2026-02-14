@@ -119,22 +119,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Welcome Screen Animation
 window.addEventListener('load', () => {
-window.addEventListener('load', () => {
     const welcomeOverlay = document.getElementById('welcomeOverlay');
     const mainContent = document.getElementById('mainContent');
 
+    // Prevent scrolling during welcome screen
     document.body.classList.add('welcome-active');
 
+    // Start exit animation after 0.7s
     setTimeout(() => {
         welcomeOverlay.classList.add('pixelate-out');
 
+        // Remove overlay after animation completes
         setTimeout(() => {
             welcomeOverlay.style.display = "none";
             mainContent.classList.add('show');
             document.body.classList.remove('welcome-active');
-        }, 800); // animation duration
+        }, 800); // Matches CSS animation duration
 
-    }, 1500); // welcome screen visible time
+    }, 700); // Welcome screen visible duration
 });
 
     
@@ -687,3 +689,4 @@ if ('performance' in window) {
     });
 
 }
+
