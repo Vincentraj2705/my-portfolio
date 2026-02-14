@@ -310,19 +310,16 @@ contactForm.addEventListener('submit', function(e) {
     
     fetch(scriptURL, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json',
-        },
         body: JSON.stringify(formDataToSend)
     })
-    .then(() => {
+    .then(response => response.text())
+    .then(data => {
         // Add to rate limiter on successful submission
         RateLimiter.addSubmission();
         generateCSRFToken(); // Generate new token after use
         
         showMessage('Message sent successfully! I\'ll get back to you soon. 🚀', 'success');
-        this.reset();
+        contactForm.reset();
     })
     .catch(error => {
         console.error('Submission error:', error);
